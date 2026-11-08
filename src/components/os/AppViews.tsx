@@ -358,15 +358,17 @@ function Music() {
   );
 }
 
+type NoteItem = { title: string; body: string };
+
 function Notes() {
-  const [notes, setNotes] = useState(() => {
-    if (typeof window === "undefined") return [{ title: "Lime OS", body: "A quieter desktop." }];
+  const [notes, setNotes] = useState<NoteItem[]>(() => {
+    const fallback: NoteItem[] = [{ title: "Lime OS", body: "A quieter desktop." }];
+    if (typeof window === "undefined") return fallback;
     try {
-      return JSON.parse(localStorage.getItem("lime-notes") ?? "null") ?? [
-        { title: "Lime OS", body: "A quieter desktop." },
-      ];
+      const parsed = JSON.parse(localStorage.getItem("lime-notes") ?? "null") as NoteItem[] | null;
+      return parsed ?? fallback;
     } catch {
-      return [{ title: "Lime OS", body: "A quieter desktop." }];
+      return fallback;
     }
   });
   const [sel, setSel] = useState(0);
@@ -379,11 +381,11 @@ function Notes() {
         <button
           type="button"
           className="m-2 rounded-md bg-[var(--lime)] px-2 py-1 text-[12px] text-black"
-          onClick={() => setNotes((n) => [{ title: "New note", body: "" }, ...n])}
+          onClick={() => setNotes((n: NoteItem[]) => [{ title: "New note", body: "" }, ...n])}
         >
           New
         </button>
-        {notes.map((n: { title: string; body: string }, i: number) => (
+        {notes.map((n, i) => (
           <button
             type="button"
             key={i}
@@ -399,7 +401,7 @@ function Notes() {
         value={notes[sel]?.body ?? ""}
         onChange={(e) => {
           const body = e.target.value;
-          setNotes((n: { title: string; body: string }[]) =>
+          setNotes((n) =>
             n.map((item, i) =>
               i === sel ? { title: body.split("\n")[0] || "Untitled", body } : item,
             ),
